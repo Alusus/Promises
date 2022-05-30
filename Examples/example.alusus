@@ -1,0 +1,171 @@
+import "Srl/Console";
+import "Apm";
+Apm.importFile("Alusus/Promises");
+
+use Srl;
+use Promises;
+
+// Test Promise.
+func testPromise {
+    Console.print("Test Promise:\n");
+    def promise: SrdRef[Promise[Int]] = Promise[Int].new();
+    Console.print("promise 1 - status: %d, value: %d\n", promise.status, promise.result);
+    promise.resolve(5);
+    Console.print("promise 1 - status: %d, value: %d\n", promise.status, promise.result);
+    promise.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error 1");
+    }, Error]);
+    Console.print("promise 1 - status: %d, error: %ld\n", promise.status, promise.error.obj~ptr);
+
+    promise = Promise[Int].new();
+    Console.print("promise 2 - status: %d, value: %d\n", promise.status, promise.result);
+    promise.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error 2");
+    }, Error]);
+    Console.print("promise 2 - status: %d, error: %s\n", promise.status, promise.error.getMessage().buf);
+    promise.resolve(5);
+    Console.print("promise 2 - status: %d, value: %d\n", promise.status, promise.result);
+}
+testPromise();
+
+// Test Promise.then
+func testPromiseThen {
+    Console.print("\nTest Promise.then:\n");
+    def promise: SrdRef[Promise[Int]] = Promise[Int].new();
+    def then: SrdRef[ThenPromise[String, Int]] = promise.then[String](
+        closure (input: Int, p: ref[ThenPromise[String, Int]]) {
+            Console.print("ThenPromise triggered\n");
+            p.resolve(String("ThenPromise - received value: ") + input);
+        }
+    );
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+    promise.resolve(6);
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+}
+testPromiseThen();
+
+// Test Promise.catch
+func testPromiseCatch {
+    Console.print("\nTest Promise.catch:\n");
+    def promise: SrdRef[Promise[Int]] = Promise[Int].new();
+    def catch: SrdRef[CatchPromise[Int]] = promise.catch(
+        closure (err: SrdRef[Error], p: ref[CatchPromise[Int]]) {
+            Console.print("CatchPromise triggered. error: %s\n", err.getMessage().buf);
+            p.resolve(7);
+        }
+    );
+    Console.print("status: %d, value: %d\n", catch.status, catch.result);
+    promise.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error 3");
+    }, Error]);
+    Console.print("status: %d, value: %d\n", catch.status, catch.result);
+}
+testPromiseCatch();
+
+// Test Promise.then.catch
+func testPromiseThenCatch {
+    Console.print("\nTest Promise.then.catch:\n");
+    def promise: SrdRef[Promise[Int]] = Promise[Int].new();
+    def catch: SrdRef[CatchPromise[String]] = promise.then[String](
+        closure (input: Int, p: ref[ThenPromise[String, Int]]) {
+            Console.print("ThenPromise triggered\n");
+            p.resolve(String("ThenPromise - received value: ") + input);
+        }
+    ).catch(
+        closure (err: SrdRef[Error], p: ref[CatchPromise[String]]) {
+            Console.print("CatchPromise triggered\n");
+            p.resolve(String("CatchPromise - error was: ") + err.getMessage());
+        }
+    );
+    Console.print("status: %d, value: %s\n", catch.status, catch.result.buf);
+    promise.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error 4");
+    }, Error]);
+    Console.print("status: %d, value: %s\n", catch.status, catch.result.buf);
+}
+testPromiseThenCatch();
+
+// Test Promise.catch.then
+func testPromiseCatchThen {
+    Console.print("\nTest Promise.catch.then:\n");
+    def promise: SrdRef[Promise[Int]] = Promise[Int].new();
+    def then: SrdRef[ThenPromise[String, Int]] = promise.catch(
+        closure (err: SrdRef[Error], p: ref[CatchPromise[Int]]) {
+            Console.print("CatchPromise triggered\n");
+            p.resolve(8);
+        }
+    ).then[String](
+        closure (input: Int, p: ref[ThenPromise[String, Int]]) {
+            Console.print("ThenPromise triggered\n");
+            p.resolve(String("ThenPromise - received value: ") + input);
+        }
+    );
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+    promise.resolve(9);
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+}
+testPromiseCatchThen();
+
+// Test AllPromise resolve.
+func testAllPromiseThen {
+    Console.print("\nTest AllPromise.then:\n");
+    def promise1: SrdRef[Promise[Int]] = Promise[Int].new();
+    def promise2: SrdRef[Promise[Int]] = Promise[Int].new();
+    def then: SrdRef[ThenPromise[String, Array[Int]]] = AllPromise[Int]
+        .new(Array[SrdRef[Promise[Int]]]({ promise1, promise2 }))
+        .then[String](
+            closure (input: Array[Int], p: ref[ThenPromise[String, Array[Int]]]) {
+                Console.print("ThenPromise triggered\n");
+                p.resolve(String("ThenPromise - received values: ") + input(0) + ", " + input(1));
+            }
+        );
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+    promise1.resolve(10);
+    Console.print("promise1 resolved. status: %d, value: %s\n", then.status, then.result.buf);
+    promise2.resolve(11);
+    Console.print("promise2 resolved. status: %d, value: %s\n", then.status, then.result.buf);
+}
+testAllPromiseThen();
+
+// Test AllPromise reject.
+func testAllPromiseCatch {
+    Console.print("\nTest AllPromise.catch:\n");
+    def promise1: SrdRef[Promise[Int]] = Promise[Int].new();
+    def promise2: SrdRef[Promise[Int]] = Promise[Int].new();
+    def catchPromise: SrdRef[CatchPromise[String]] = AllPromise[Int]
+        .new(Array[SrdRef[Promise[Int]]]({ promise1, promise2 }))
+        .then[String](
+            closure (input: Array[Int], p: ref[ThenPromise[String, Array[Int]]]) {
+                Console.print("ThenPromise triggered\n");
+                p.resolve(String("ThenPromise - received values: ") + input(0) + ", " + input(1));
+            }
+        ).catch(
+            closure (err: SrdRef[Error], p: ref[CatchPromise[String]]) {
+                Console.print("CatchPromise triggered\n");
+                p.resolve(String("CatchPromise - error was: ") + err.getMessage());
+            }
+        );
+    Console.print("status: %d, value: %s\n", catchPromise.status, catchPromise.result.buf);
+    promise1.resolve(10);
+    Console.print("promise1 resolved. status: %d, value: %s\n", catchPromise.status, catchPromise.result.buf);
+    promise2.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error 5");
+    }, Error]);
+    Console.print("promise2 rejected. status: %d, value: %s\n", catchPromise.status, catchPromise.result.buf);
+}
+testAllPromiseCatch();
+
+// TODO: Use a module and cleanups
+
+// TODO: An easy way to convert promise result type.
+

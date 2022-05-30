@@ -1,0 +1,39 @@
+Test Promise:
+promise 1 - status: 0, value: 0
+promise 1 - status: 1, value: 5
+promise 1 - status: 1, error: 0
+promise 2 - status: 0, value: 0
+promise 2 - status: 2, error: Unknown error 2
+promise 2 - status: 2, value: 0
+
+Test Promise.then:
+status: 0, value: 
+ThenPromise triggered
+status: 1, value: ThenPromise - received value: 6
+
+Test Promise.catch:
+status: 0, value: 1631806835
+CatchPromise triggered. error: Unknown error 3
+status: 1, value: 7
+
+Test Promise.then.catch:
+status: 0, value: 
+CatchPromise triggered
+status: 1, value: CatchPromise - error was: Unknown error 4
+
+Test Promise.catch.then:
+status: 0, value: 
+ThenPromise triggered
+status: 1, value: ThenPromise - received value: 9
+
+Test AllPromise.then:
+status: 0, value: 
+promise1 resolved. status: 0, value: 
+ThenPromise triggered
+promise2 resolved. status: 1, value: ThenPromise - received values: 10, 11
+
+Test AllPromise.catch:
+status: 0, value: 
+promise1 resolved. status: 0, value: 
+CatchPromise triggered
+promise2 rejected. status: 1, value: CatchPromise - error was: Unknown error 5
