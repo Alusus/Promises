@@ -39,8 +39,8 @@ module Promises {
         }
 
         handler [ThenType: type] this.then(
-            callback: closure (input: ResultType, promise: ref[ThenPromise[ThenType, ResultType]])
-        ): SrdRef[ThenPromise[ThenType, ResultType]] {
+            callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
+        ): SrdRef[Promise[ThenType]] {
             def thenPromise: SrdRef[ThenPromise[ThenType, ResultType]];
             thenPromise.construct();
             thenPromise.wkThis = castSrdRef[thenPromise, Promise[ThenType]];
@@ -51,12 +51,12 @@ module Promises {
 
             if this.status == Status.RESOLVED thenPromise.chainNode.onResolved(this.result)
             else if this.status == Status.REJECTED thenPromise.chainNode.onRejected(this.error);
-            return thenPromise;
+            return thenPromise.wkThis;
         }
 
         handler this.catch(
-            callback: closure (err: SrdRef[Error], promise: ref[CatchPromise[ResultType]])
-        ): SrdRef[CatchPromise[ResultType]] {
+            callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
+        ): SrdRef[Promise[ResultType]] {
             def catchPromise: SrdRef[CatchPromise[ResultType]];
             catchPromise.construct();
             catchPromise.wkThis = castSrdRef[catchPromise, Promise[ResultType]];
@@ -67,7 +67,19 @@ module Promises {
 
             if this.status == Status.RESOLVED catchPromise.chainNode.onResolved(this.result)
             else if this.status == Status.REJECTED catchPromise.chainNode.onRejected(this.error);
-            return catchPromise;
+            return catchPromise.wkThis;
+        }
+
+        function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]] {
+            def p: SrdRef[AllPromise[ResultType]] = AllPromise[ResultType].new(inputs);
+            return p.wkThis;
+        }
+
+        function all (count: Int, inputs: ...SrdRef[Promise[ResultType]]): SrdRef[Promise[Array[ResultType]]] {
+            def ar: Array[SrdRef[Promise[ResultType]]];
+            while count-- > 0 ar.add(inputs~next_arg[SrdRef[Promise[ResultType]]]);
+            def p: SrdRef[AllPromise[ResultType]] = AllPromise[ResultType].new(ar);
+            return p.wkThis;
         }
     }
 
@@ -75,7 +87,7 @@ module Promises {
         @injection def promise: Promise[ResultType];
         @injection def chainNode: ChainNode[InputType];
         def depPromise: SrdRef[Promise[InputType]];
-        def callback: closure (input: InputType, promise: ref[ThenPromise[ResultType, InputType]]);
+        def callback: closure (input: InputType, promise: ref[Promise[ResultType]]);
         handler (this: ChainNode[InputType]).onResolved(result: InputType) set_ptr {
             unshiftThis[chainNode];
             this.callback(result, this);
@@ -90,7 +102,7 @@ module Promises {
         @injection def promise: Promise[InputType];
         @injection def chainNode: ChainNode[InputType];
         def depPromise: SrdRef[Promise[InputType]];
-        def callback: closure (err: SrdRef[Error], promise: ref[CatchPromise[InputType]]);
+        def callback: closure (err: SrdRef[Error], promise: ref[Promise[InputType]]);
         handler (this: ChainNode[InputType]).onResolved(result: InputType) set_ptr {
             unshiftThis[chainNode];
             this.resolve(result);
