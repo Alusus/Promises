@@ -1,2 +1,2 @@
 # Promises
-A simple Promise library.
+A simple Promise library for Alusus Language.
