@@ -70,6 +70,14 @@ module Promises {
             return catchPromise.wkThis;
         }
 
+        handler this.ignoreResult(): SrdRef[Promise[Int]] {
+            return this.then[Int](
+                closure (input: ResultType, p: ref[Promise[Int]]) {
+                    p.resolve(Int(0));
+                }
+            );
+        }
+
         function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]] {
             def p: SrdRef[AllPromise[ResultType]] = AllPromise[ResultType].new(inputs);
             return p.wkThis;

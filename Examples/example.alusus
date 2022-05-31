@@ -173,6 +173,25 @@ func testAllPromiseCatch {
 }
 testAllPromiseCatch();
 
-// TODO: An easy way to convert promise result type.
+func testIgnoreResult {
+    Console.print("\nTest this.ignoreResult:\n");
+    def promise1: SrdRef[Promise[Num]] = Promise[Num].new();
+    def promise2: SrdRef[Promise[String]] = Promise[String].new();
+    def then: SrdRef[Promise[String]] = Promise[Int]
+        .all({ promise1.ignoreResult(), promise2.ignoreResult() })
+        .then[String](
+            closure (input: Array[Int], p: ref[Promise[String]]) {
+                Console.print("ThenPromise triggered\n");
+                p.resolve(String("ThenPromise - received values: ") + input(0) + ", " + input(1));
+            }
+        );
+    Console.print("status: %d, value: %s\n", then.status, then.result.buf);
+    promise1.resolve(Num(10));
+    Console.print("promise1 resolved. status: %d, value: %s\n", then.status, then.result.buf);
+    promise2.resolve(String("11"));
+    Console.print("promise2 resolved. status: %d, value: %s\n", then.status, then.result.buf);
+}
+testIgnoreResult();
+
 // TODO: Localize
 
