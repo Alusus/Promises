@@ -1,0 +1,214 @@
+import "closure";
+
+module Promises {
+    class Promise [ResultType: type] {
+        def wkThis: WkRef[Promise[ResultType]];
+        def status: Int = Status.NEW;
+        def result: ResultType;
+        def error: SrdRef[Error];
+        def child: ref[ChainNode[ResultType]];
+        child~ptr = 0;
+
+        handler this.resolve(res: ResultType) {
+            if this.status != Status.NEW return;
+            this.result = res;
+            this.status = Status.RESOLVED;
+            def chain: ref[ChainNode[ResultType]](this.child);
+            while chain~ptr != 0 {
+                chain.onResolved(res);
+                chain~no_deref = chain.next;
+            }
+        }
+
+        handler this.reject(err: SrdRef[Error]) {
+            if this.status != Status.NEW return;
+            this.error = err;
+            this.status = Status.REJECTED;
+            def chain: ref[ChainNode[ResultType]](this.child);
+            while chain~ptr != 0 {
+                chain.onRejected(err);
+                chain~no_deref = chain.next;
+            }
+        }
+
+        function new (): SrdRef[Promise[ResultType]] {
+            return SrdRef[Promise[ResultType]]().{
+                construct();
+                this.wkThis = this;
+            };
+        }
+
+        handler [ThenType: type] this.then(
+            callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
+        ): SrdRef[Promise[ThenType]] {
+            def thenPromise: SrdRef[ThenPromise[ThenType, ResultType]];
+            thenPromise.construct();
+            thenPromise.wkThis = castSrdRef[thenPromise, Promise[ThenType]];
+            thenPromise.callback = callback;
+            thenPromise.chainNode.next~no_deref = this.child;
+            this.child~no_deref = thenPromise.chainNode;
+            thenPromise.depPromise = this.wkThis;
+
+            if this.status == Status.RESOLVED thenPromise.chainNode.onResolved(this.result)
+            else if this.status == Status.REJECTED thenPromise.chainNode.onRejected(this.error);
+            return thenPromise.wkThis;
+        }
+
+        handler this.catch(
+            callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
+        ): SrdRef[Promise[ResultType]] {
+            def catchPromise: SrdRef[CatchPromise[ResultType]];
+            catchPromise.construct();
+            catchPromise.wkThis = castSrdRef[catchPromise, Promise[ResultType]];
+            catchPromise.callback = callback;
+            catchPromise.chainNode.next~no_deref = this.child;
+            this.child~no_deref = catchPromise.chainNode;
+            catchPromise.depPromise = this.wkThis;
+
+            if this.status == Status.RESOLVED catchPromise.chainNode.onResolved(this.result)
+            else if this.status == Status.REJECTED catchPromise.chainNode.onRejected(this.error);
+            return catchPromise.wkThis;
+        }
+
+        handler this.ignoreResult(): SrdRef[Promise[Int]] {
+            return this.then[Int](
+                closure (input: ResultType, p: ref[Promise[Int]]) {
+                    p.resolve(Int(0));
+                }
+            );
+        }
+
+        function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]] {
+            def p: SrdRef[AllPromise[ResultType]] = AllPromise[ResultType].new(inputs);
+            return p.wkThis;
+        }
+
+        function all (count: Int, inputs: ...SrdRef[Promise[ResultType]]): SrdRef[Promise[Array[ResultType]]] {
+            def ar: Array[SrdRef[Promise[ResultType]]];
+            while count-- > 0 ar.add(inputs~next_arg[SrdRef[Promise[ResultType]]]);
+            def p: SrdRef[AllPromise[ResultType]] = AllPromise[ResultType].new(ar);
+            return p.wkThis;
+        }
+    }
+
+    class ThenPromise [ResultType: type, InputType: type] {
+        @injection def promise: Promise[ResultType];
+        @injection def chainNode: ChainNode[InputType];
+        def depPromise: SrdRef[Promise[InputType]];
+        def callback: closure (input: InputType, promise: ref[Promise[ResultType]]);
+        handler (this: ChainNode[InputType]).onResolved(result: InputType) set_ptr {
+            unshiftThis[chainNode];
+            this.callback(result, this);
+        }
+        handler (this: ChainNode[InputType]).onRejected(err: SrdRef[Error]) set_ptr {
+            unshiftThis[chainNode];
+            this.reject(err);
+        }
+    }
+
+    class CatchPromise [InputType: type] {
+        @injection def promise: Promise[InputType];
+        @injection def chainNode: ChainNode[InputType];
+        def depPromise: SrdRef[Promise[InputType]];
+        def callback: closure (err: SrdRef[Error], promise: ref[Promise[InputType]]);
+        handler (this: ChainNode[InputType]).onResolved(result: InputType) set_ptr {
+            unshiftThis[chainNode];
+            this.resolve(result);
+        }
+        handler (this: ChainNode[InputType]).onRejected(err: SrdRef[Error]) set_ptr {
+            unshiftThis[chainNode];
+            this.callback(err, this);
+        }
+    }
+
+    class AllPromise [InputType: type] {
+        @injection def promise: Promise[Array[InputType]];
+        def inputChainNodes: Array[SrdRef[AllChainNode[InputType]]];
+
+        function new (inputs: Array[SrdRef[Promise[InputType]]]): SrdRef[AllPromise[InputType]] {
+            return SrdRef[AllPromise[InputType]]()~use_in(__this){
+                construct();
+                promise.wkThis = castSrdRef[__this, Promise[Array[InputType]]];
+                def i: Int;
+                for i = 0, i < inputs.getLength(), ++i {
+                    inputChainNodes.add(SrdRef[AllChainNode[InputType]]()~use_in(self){
+                        construct();
+                        depPromise = inputs(i);
+                        allPromise~no_deref = __this.obj;
+
+                        next~no_deref = inputs(i).child;
+                        inputs(i).child~no_deref = self.obj;
+                    });
+                    result.add(InputType());
+                }
+            };
+        }
+        
+        handler this.onResolved(r: InputType, p: ref[AllChainNode[InputType]]) {
+            if this.status != Status.NEW return;
+            def i: Int;
+            def allResolved: Bool = true;
+            for i = 0, i < this.inputChainNodes.getLength(), ++i {
+                if this.inputChainNodes(i).obj~ptr == p~ptr {
+                    this.result(i) = r;
+                }
+                if this.inputChainNodes(i).depPromise.status != Status.RESOLVED {
+                    allResolved = false;
+                }
+            }
+            if allResolved this.resolve(this.result);
+        }
+        
+        handler this.onRejected(err: SrdRef[Error], p: ref[AllChainNode[InputType]]) {
+            if this.status != Status.NEW return;
+            this.reject(err);
+        }
+    }
+
+    def Status: {
+        def NEW: 0;
+        def RESOLVED: 1;
+        def REJECTED: 2;
+    }
+
+    class ChainNode [InputType: type] {
+        def next: ref[ChainNode[InputType]];
+        next~ptr = 0;
+        handler this.onResolved(result: InputType) as_ptr;
+        handler this.onRejected(err: SrdRef[Error]) as_ptr;
+    }
+
+    class AllChainNode [InputType: type] {
+        @injection def chainNode: ChainNode[InputType];
+        def depPromise: SrdRef[Promise[InputType]];
+        def allPromise: ref[AllPromise[InputType]];
+        handler (this: ChainNode[InputType]).onResolved(result: InputType) set_ptr {
+            this.allPromise.onResolved(result, this);
+        }
+        handler (this: ChainNode[InputType]).onRejected(err: SrdRef[Error]) set_ptr {
+            this.allPromise.onRejected(err, this);
+        }
+    }
+
+    class Error {
+        handler this.getCode(): Int as_ptr;
+        handler this.getMessage(): String as_ptr;
+    }
+
+    class GenericError {
+        @injection def error: Error;
+        def code: Int;
+        def message: String;
+        handler (this: Error).getCode(): Int set_ptr {
+            return this.code;
+        }
+        handler (this: Error).getMessage(): String set_ptr {
+            return this.message;
+        }
+    }
+
+    macro unshiftThis[member] {
+        this~ptr = (this~ptr~cast[ArchWord] - ptr[this_type](0)~cnt.member~ptr~cast[ArchWord])~cast[ptr[this_type]];
+    }
+}
+
