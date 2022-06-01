@@ -37,3 +37,9 @@ status: 0, value:
 promise1 resolved. status: 0, value: 
 CatchPromise triggered
 promise2 rejected. status: 1, value: CatchPromise - error was: Unknown error 5
+
+Test this.ignoreResult:
+status: 0, value: 
+promise1 resolved. status: 0, value: 
+ThenPromise triggered
+promise2 resolved. status: 1, value: ThenPromise - received values: 0, 0
