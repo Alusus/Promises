@@ -129,6 +129,7 @@ module Promises {
             return SrdRef[AllPromise[InputType]]()~use_in(__this){
                 construct();
                 promise.wkThis = castSrdRef[__this, Promise[Array[InputType]]];
+                def allResolved: Bool = true;
                 def i: Int;
                 for i = 0, i < inputs.getLength(), ++i {
                     inputChainNodes.add(SrdRef[AllChainNode[InputType]]()~use_in(self){
@@ -139,8 +140,17 @@ module Promises {
                         next~no_deref = inputs(i).child;
                         inputs(i).child~no_deref = self.obj;
                     });
-                    result.add(InputType());
+                    if inputChainNodes(i).depPromise.status == Status.RESOLVED {
+                        result.add(inputChainNodes(i).depPromise.result);
+                    } else {
+                        allResolved = false;
+                        result.add(InputType());
+                        if inputChainNodes(i).depPromise.status == Status.REJECTED and status == Status.NEW {
+                            reject(inputChainNodes(i).depPromise.error);
+                        }
+                    }
                 }
+                if allResolved resolve(result);
             };
         }
         
