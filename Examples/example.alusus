@@ -1,4 +1,5 @@
 import "Srl/Console";
+import "Srl/refs";
 import "Apm";
 Apm.importFile("Alusus/Promises");
 
@@ -192,6 +193,4 @@ func testIgnoreResult {
     Console.print("promise2 resolved. status: %d, value: %s\n", then.status, then.result.buf);
 }
 testIgnoreResult();
-
-// TODO: Localize
 
