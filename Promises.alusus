@@ -27,6 +27,8 @@ module Promises {
         unresolvedPromisesUnlocker();
     }
 
+    macro castClosure [c, T] T().{ this.data = c.data; this.fp = c.fp~cast[T.fp~type]; };
+
     class Promise [ResultType: type] {
         def wkThis: WkRef[Promise[ResultType]];
         def status: Int = Status.NEW;
@@ -39,14 +41,17 @@ module Promises {
 
         handler this.resolve(res: ResultType) {
             if this.status != Status.NEW return;
+            removeUnresolvedPromise[ResultType](SrdRef[Promise[ResultType]](this.wkThis));
             this.result = res;
             this.status = Status.RESOLVED;
             def chain: ref[ChainNode[ResultType]](this.child);
             while chain~ptr != 0 {
+                // The child may get released during onResolved, so we'll capture its info
+                // before the call to avoid access to invalid memory.
+                def next: ref[ChainNode[ResultType]](chain.next);
                 chain.onResolved(res);
-                chain~no_deref = chain.next;
+                chain~no_deref = next;
             }
-            removeUnresolvedPromise[ResultType](SrdRef[Promise[ResultType]](this.wkThis));
         }
 
         handler this.resolve(p: SrdRef[Promise[ResultType]]) {
@@ -64,14 +69,17 @@ module Promises {
 
         handler this.reject(err: SrdRef[Error]) {
             if this.status != Status.NEW return;
+            removeUnresolvedPromise[ResultType](SrdRef[Promise[ResultType]](this.wkThis));
             this.error = err;
             this.status = Status.REJECTED;
             def chain: ref[ChainNode[ResultType]](this.child);
             while chain~ptr != 0 {
+                // The child may get released during onRejected, so we'll capture its info
+                // before the call to avoid access to invalid memory.
+                def next: ref[ChainNode[ResultType]](chain.next);
                 chain.onRejected(err);
-                chain~no_deref = chain.next;
+                chain~no_deref = next;
             }
-            removeUnresolvedPromise[ResultType](SrdRef[Promise[ResultType]](this.wkThis));
         }
 
         function new (): SrdRef[Promise[ResultType]] {
@@ -101,6 +109,12 @@ module Promises {
             };
         }
 
+        handler [ThenType: type] this.then(
+            cb: closure (input: ResultType, promise: ref[ThenPromise[ThenType, ResultType]])
+        ): SrdRef[Promise[ThenType]] {
+            return this.then[ThenType](castClosure[cb, closure (input: ResultType, promise: ref[Promise[ThenType]])]);
+        }
+
         handler this.catch(
             cb: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
         ): SrdRef[Promise[ResultType]] {
@@ -118,6 +132,12 @@ module Promises {
                 }
                 addUnresolvedPromise[ResultType](catchPromise);
             };
+        }
+
+        handler this.catch(
+            cb: closure (err: SrdRef[Error], promise: ref[CatchPromise[ResultType]])
+        ): SrdRef[Promise[ResultType]] {
+            return this.catch(castClosure[cb, closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])]);
         }
 
         handler this.ignoreResult(): SrdRef[Promise[Int]] {
@@ -163,15 +183,44 @@ module Promises {
         }
     }
 
+    class ThenPromise [ResultType: type, InputType: type] {
+        @injection def promise: Promise[ResultType];
+
+        handler this.retry(p: SrdRef[Promise[InputType]]) {
+            if this.resolver.getResolverType() != ResolverType.THEN_RESOLVER return;
+            this.resolver.obj~cast[ref[ThenResolver[ResultType, InputType]]].chainNode.setPromise(p);
+            if p.status == Status.RESOLVED {
+                this.resolver.obj~cast[ref[ThenResolver[ResultType, InputType]]].chainNode.onResolved(p.result);
+            } else if p.status == Status.REJECTED {
+                this.resolver.obj~cast[ref[ThenResolver[ResultType, InputType]]].chainNode.onRejected(p.error);
+            }
+        }
+    }
+
+    class CatchPromise [ResultType: type] {
+        @injection def promise: Promise[ResultType];
+
+        handler this.retry(p: SrdRef[Promise[ResultType]]) {
+            if this.resolver.getResolverType() != ResolverType.CATCH_RESOLVER return;
+            this.resolver.obj~cast[ref[CatchResolver[ResultType]]].chainNode.setPromise(p);
+            if p.status == Status.RESOLVED {
+                this.resolver.obj~cast[ref[CatchResolver[ResultType]]].chainNode.onResolved(p.result);
+            } else if p.status == Status.REJECTED {
+                this.resolver.obj~cast[ref[CatchResolver[ResultType]]].chainNode.onRejected(p.error);
+            }
+        }
+    }
+
     class ChainNode [InputType: type] {
         def next: ref[ChainNode[InputType]](nullRef[ChainNode[InputType]]);
         def depPromise: SrdRef[Promise[InputType]];
         handler this.setPromise(p: SrdRef[Promise[InputType]]) {
+            this.releasePromise();
             this.next~no_deref = p.child;
             p.child~no_deref = this;
             this.depPromise = p;
         }
-        handler this~terminate() {
+        handler this.releasePromise() {
             if this.depPromise.isNull() return;
             if this.depPromise.child~ptr == this~ptr {
                 this.depPromise.child~no_deref = this.next;
@@ -186,11 +235,22 @@ module Promises {
                 }
             }
         }
+        handler this~terminate() {
+            this.releasePromise();
+        }
         handler this.onResolved(result: InputType) as_ptr;
         handler this.onRejected(err: SrdRef[Error]) as_ptr;
     }
 
+    def ResolverType: {
+        def DIRECT_RESOLVER: 1;
+        def THEN_RESOLVER: 2;
+        def CATCH_RESOLVER: 3;
+        def ALL_RESOLVER: 4;
+    };
+
     class Resolver [ResultType: type] {
+        handler this.getResolverType(): Int as_ptr;
         def promise: ref[Promise[ResultType]];
     }
 
@@ -204,6 +264,9 @@ module Promises {
         handler (this: ChainNode[ResultType]).onRejected(err: SrdRef[Error]) set_ptr {
             unshiftThis[chainNode];
             this.promise.reject(err);
+        }
+        handler (this:Resolver[ResultType]).getResolverType(): Int set_ptr {
+            return ResolverType.DIRECT_RESOLVER;
         }
     }
 
@@ -219,6 +282,9 @@ module Promises {
             unshiftThis[chainNode];
             this.promise.reject(err);
         }
+        handler (this:Resolver[ResultType]).getResolverType(): Int set_ptr {
+            return ResolverType.THEN_RESOLVER;
+        }
     }
 
     class CatchResolver [InputType: type] {
@@ -232,6 +298,9 @@ module Promises {
         handler (this: ChainNode[InputType]).onRejected(err: SrdRef[Error]) set_ptr {
             unshiftThis[chainNode];
             this.callback(err, this.promise);
+        }
+        handler (this:Resolver[InputType]).getResolverType(): Int set_ptr {
+            return ResolverType.CATCH_RESOLVER;
         }
     }
 
@@ -269,6 +338,9 @@ module Promises {
             if this.promise.status != Status.NEW return;
             this.promise.reject(err);
         }
+        handler (this:Resolver[Array[InputType]]).getResolverType(): Int set_ptr {
+            return ResolverType.ALL_RESOLVER;
+        }
     }
 
     def Status: {
@@ -298,4 +370,3 @@ module Promises {
         this~ptr = (this~ptr~cast[ArchWord] - ptr[this_type](0)~cnt.member~ptr~cast[ArchWord])~cast[ptr[this_type]];
     }
 }
-

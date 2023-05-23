@@ -57,6 +57,24 @@ func testPromiseThen {
 }
 testPromiseThen();
 
+// Test Promise.then.retry
+func testPromiseThenRetry {
+    Console.print("\nTest Promise.then.retry:\n");
+    def promise: SrdRef[Promise[Num]] = Promise[Num].new();
+    def then: SrdRef[Promise[String]] = promise.then[String](
+        closure (promise: by_ref)&(input: Num, p: ref[ThenPromise[String, Num]]) {
+            Console.print("ThenPromise triggered %d\n", input.val);
+            promise = Promise[Num].new();
+            p.retry(promise);
+        }
+    );
+    def i: Int;
+    for i = 0, i < 10, ++i {
+        promise.resolve(Num(i));
+    }
+}
+testPromiseThenRetry();
+
 // Test Promise.catch
 func testPromiseCatch {
     Console.print("\nTest Promise.catch:\n");
@@ -76,6 +94,28 @@ func testPromiseCatch {
     Console.print("status: %d, value: %d\n", catch.status, catch.result.val);
 }
 testPromiseCatch();
+
+// Test Promise.catch.retry
+func testPromiseCatchRetry {
+    Console.print("\nTest Promise.catch.retry:\n");
+    def promise: SrdRef[Promise[Num]] = Promise[Num].new();
+    def catch: SrdRef[Promise[Num]] = promise.catch(
+        closure (promise: by_ref)&(err: SrdRef[Error], p: ref[CatchPromise[Num]]) {
+            Console.print("CatchPromise triggered. error: %s\n", err.getMessage().buf);
+            promise = Promise[Num].new();
+            p.retry(promise);
+        }
+    );
+    def i: Int;
+    for i = 0, i < 10, ++i {
+        promise.reject(castSrdRef[SrdRef[GenericError]().{
+            construct();
+            code = 1;
+            message = String("Unknown error ") + i;
+        }, Error]);
+    }
+}
+testPromiseCatchRetry();
 
 // Test Promise.then.catch
 func testPromiseThenCatch {
