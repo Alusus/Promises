@@ -11,10 +11,34 @@ status: 0, value:
 ThenPromise triggered
 status: 1, value: ThenPromise - received value: 6
 
+Test Promise.then.retry:
+ThenPromise triggered 0
+ThenPromise triggered 1
+ThenPromise triggered 2
+ThenPromise triggered 3
+ThenPromise triggered 4
+ThenPromise triggered 5
+ThenPromise triggered 6
+ThenPromise triggered 7
+ThenPromise triggered 8
+ThenPromise triggered 9
+
 Test Promise.catch:
 status: 0, value: 0
 CatchPromise triggered. error: Unknown error 3
 status: 1, value: 7
+
+Test Promise.catch.retry:
+CatchPromise triggered. error: Unknown error 0
+CatchPromise triggered. error: Unknown error 1
+CatchPromise triggered. error: Unknown error 2
+CatchPromise triggered. error: Unknown error 3
+CatchPromise triggered. error: Unknown error 4
+CatchPromise triggered. error: Unknown error 5
+CatchPromise triggered. error: Unknown error 6
+CatchPromise triggered. error: Unknown error 7
+CatchPromise triggered. error: Unknown error 8
+CatchPromise triggered. error: Unknown error 9
 
 Test Promise.then.catch:
 status: 0, value: 

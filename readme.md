@@ -106,6 +106,15 @@ parameters:
 
 `res` the result to be stored in the promise as the execution result.
 
+```
+handler this.resolve(p: SrdRef[Promise[ResultType]]);
+```
+
+Resolve the promise using another promise. The current promise will wait for the given
+promise to be complete and will carry its result.
+
+`p` the promise whose status will eventually propagate to the current promise.
+
 ### reject
 
 ```
@@ -234,4 +243,85 @@ class GenericError {
 ```
 
 This class is an implementation of the abstract class `Error` that allows storing arbitrary code and message.
+
+## Recursive Promises
+
+In some cases you need to create recursive promises that makes a very long or an infinite loop. An example
+of these are promsies that periodically read data from the net or promises that runs periodically with
+a delay between runs or promises that catch errors while reading data from the web and wants to
+indefinitely keep trying until the server issue is resolved. In such cases if we use the `resolve` method
+to resolve the promise with a new child promise we can end up with a stack overflow in addition to
+consuming more memory than actually necessary.
+
+To solve this the Promises library provides a `retry` method. This method is similar to `resolve` except
+that it reuses the currnt promise to avoid growing the stack or the memory footprint as it replaces
+the child promise with a new one rather than chaining the new promise to the existing chain. To clarify
+this assume you have promise p1 with a `then` operation applied to it resulting in a t1 object that
+depends on p1. If you want to recursively retry the operation inside t1 you'll need to create p2
+and apply `then` to it to get t2 and use it in `resolve`. After five iterations you'll end up with
+the following timeline for dependency updates:
+
+* t1 -> p1
+* t1 -> t2 -> p2
+* t1 -> t2 -> t3 -> p3
+* t1 -> t2 -> t3 -> t4 -> p4
+* t1 -> t2 -> t3 -> t4 -> t5 -> p5
+
+If instead we use the `retry` method then we don't need to apply `then` on the new promises we
+are creating, instead we just pass the new promise to the existing `then` object to reuse it,
+which results in the following timeline:
+
+* t1 -> p1
+* t1 -> p2
+* t1 -> p3
+* t1 -> p4
+* t1 -> p5
+
+The `retry` operation can be used in `then` and `catch`:
+
+### ThenPromise
+
+To use `retry` inside the closure of `then` we need to update the second arg of the closure
+from `Promise` to `ThenPromise` and then use `retry` on the promise, as in the following
+example:
+
+```
+def promise: SrdRef[Promise[Num]] = Promise[Num].new();
+def then: SrdRef[Promise[String]] = promise.then[String](
+    closure (input: Num, p: ref[ThenPromise[String, Num]]) {
+        Console.print("ThenPromise triggered %d\n", input.val);
+        promise = Promise[Num].new();
+        p.retry(promise);
+    }
+);
+def i: Int;
+for i = 0, i < 10, ++i {
+    promise.resolve(Num(i));
+}
+```
+
+### CatchPromise
+
+To use `retry` inside the closure of `catch` we need to update the second arg of the closure
+from `Promise` to `CatchPromise` and then use `retry` on the promise, as in the following
+example:
+
+```
+def promise: SrdRef[Promise[Num]] = Promise[Num].new();
+def catch: SrdRef[Promise[Num]] = promise.catch(
+    closure (err: SrdRef[Error], p: ref[CatchPromise[Num]]) {
+        Console.print("CatchPromise triggered. error: %s\n", err.getMessage().buf);
+        promise = Promise[Num].new();
+        p.retry(promise);
+    }
+);
+def i: Int;
+for i = 0, i < 10, ++i {
+    promise.reject(castSrdRef[SrdRef[GenericError]().{
+        construct();
+        code = 1;
+        message = String("Unknown error ") + i;
+    }, Error]);
+}
+```
 
