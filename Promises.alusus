@@ -1,3 +1,4 @@
+import "Srl/errors";
 import "closure";
 
 module Promises {
@@ -347,23 +348,6 @@ module Promises {
         def NEW: 0;
         def RESOLVED: 1;
         def REJECTED: 2;
-    }
-
-    class Error {
-        handler this.getCode(): Int as_ptr;
-        handler this.getMessage(): String as_ptr;
-    }
-
-    class GenericError {
-        @injection def error: Error;
-        def code: Int;
-        def message: String;
-        handler (this: Error).getCode(): Int set_ptr {
-            return this.code;
-        }
-        handler (this: Error).getMessage(): String set_ptr {
-            return this.message;
-        }
     }
 
     macro unshiftThis[member] {

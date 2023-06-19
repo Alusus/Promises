@@ -20,6 +20,7 @@ Apm.importFile("Alusus/Promises");
 
 ```
 import "Srl/Console";
+import "Srl/errors";
 import "Apm";
 Apm.importFile("Alusus/Promises");
 
@@ -213,36 +214,6 @@ def Status: {
 }
 ```
 This three states of a promsie.
-
-### Error
-
-```
-class Error {
-    handler this.getCode(): Int as_ptr;
-    handler this.getMessage(): String as_ptr;
-}
-```
-This class holds the error's information.
-
-`getCode` return the error's code.
-
-`getMessage` return the error's message.
-
-This is an abstract class.
-
-### GenericError
-
-```
-class GenericError {
-    @injection def error: Error;
-    def code: Int;
-    def message: String;
-    handler (this: Error).getCode(): Int set_ptr;
-    handler (this: Error).getMessage(): String set_ptr;
-}
-```
-
-This class is an implementation of the abstract class `Error` that allows storing arbitrary code and message.
 
 ## Recursive Promises
 

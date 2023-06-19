@@ -95,6 +95,7 @@ Apm.importFile("Alusus/Promises");
 
 ```
 import "Srl/Console";
+import "Srl/errors";
 import "Apm";
 Apm.importFile("Alusus/Promises");
 
@@ -389,63 +390,6 @@ def Status: {
 ```
 
 يستعمل هذا الصنف لتحديد حالة المؤجلة.
-
-### خـطأ (Error)
-
-<div dir=rtl>
-
-```
-صنف خـطأ {
-    عرف هات_الرمز(): صـحيح كمؤشر؛
-    عرف هات_الرسالة(): نـص كمؤشر؛
-}
-```
-
-</div>
-
-```
-class Error {
-    handler this.getCode(): Int as_ptr;
-    handler this.getMessage(): String as_ptr;
-}
-```
-
-يحمل هذا الصنف معلومات الخطأ عن طريق وظيفتين:
-
-`هات_الرمز` (`getCode`) تستعمل هذه الوظيفة لجلب رمز الخطأ.
-
-`هات_الرسالة` (`getMessage`) تستعمل هذه الوظيفة لجلب رسالة الخطأ.
-
-هذا الصنف هو صنف مجرد، و بالتالي يجب على صف ابن أن يقوم بتحقيق هذه الوظائف.
-
-### خـطأ_عـام (GenericError)
-
-<div dir=rtl>
-
-```
-صنف خـطأ_عام {
-    @حقنة عرف خطأ: خـطأ؛
-    عرف الرمز: صـحيح؛
-    عرف الرسالة: نـص؛
-    عملية (هذا: خـطأ).هات_الكود(): صـحيح كمؤشر؛
-    عملية (هذا: خـطأ).هات_الرسالة(): نـص كمؤشر؛
-}
-```
-
-</div>
-
-```
-class GenericError {
-    @injection def error: Error;
-    def code: Int;
-    def message: String;
-    handler (this: Error).getCode(): Int set_ptr;
-    handler (this: Error).getMessage(): String set_ptr;
-}
-```
-هذا الصنف هو تحقيق للصنف المجرد `خـطأ`.
-
-و هو يقوم بتخزين رمز و رسالة الخطأ و يحقق الوظيفتين اللتين تعيدان رمز و رسالة الخطأ.
 
 ## المؤجلات العودية (recursive)
 
