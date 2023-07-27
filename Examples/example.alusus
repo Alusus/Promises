@@ -23,7 +23,7 @@ func testPromise {
     Console.print("promise 1 - status: %d, value: %d\n", promise.status, promise.result.val);
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err1";
         message = String("Unknown error 1");
     }, Error]);
     Console.print("promise 1 - status: %d, error: %ld\n", promise.status, promise.error.obj~ptr);
@@ -32,7 +32,7 @@ func testPromise {
     Console.print("promise 2 - status: %d, value: %d\n", promise.status, promise.result.val);
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err2";
         message = String("Unknown error 2");
     }, Error]);
     Console.print("promise 2 - status: %d, error: %s\n", promise.status, promise.error.getMessage().buf);
@@ -88,7 +88,7 @@ func testPromiseCatch {
     Console.print("status: %d, value: %d\n", catch.status, catch.result.val);
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err3";
         message = String("Unknown error 3");
     }, Error]);
     Console.print("status: %d, value: %d\n", catch.status, catch.result.val);
@@ -110,7 +110,7 @@ func testPromiseCatchRetry {
     for i = 0, i < 10, ++i {
         promise.reject(castSrdRef[SrdRef[GenericError]().{
             construct();
-            code = 1;
+            code = String("example_err") + i;
             message = String("Unknown error ") + i;
         }, Error]);
     }
@@ -135,7 +135,7 @@ func testPromiseThenCatch {
     Console.print("status: %d, value: %s\n", catch.status, catch.result.buf);
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err4";
         message = String("Unknown error 4");
     }, Error]);
     Console.print("status: %d, value: %s\n", catch.status, catch.result.buf);
@@ -207,7 +207,7 @@ func testAllPromiseCatch {
     Console.print("promise1 resolved. status: %d, value: %s\n", catchPromise.status, catchPromise.result.buf);
     promise2.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err5";
         message = String("Unknown error 5");
     }, Error]);
     Console.print("promise2 rejected. status: %d, value: %s\n", catchPromise.status, catchPromise.result.buf);

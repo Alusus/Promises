@@ -49,7 +49,7 @@ func testPromise {
     // reject the promise with an error that has the code 1 and an appropriate message
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err1";
         message = String("Unknown error 1");
     }, Error]);
     Console.print("promise 1 - status: %d, error: %ld\n", promise.status, promise.error.obj~ptr);
@@ -290,7 +290,7 @@ def i: Int;
 for i = 0, i < 10, ++i {
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = String("example_err") + i;
         message = String("Unknown error ") + i;
     }, Error]);
 }

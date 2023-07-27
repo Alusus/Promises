@@ -63,7 +63,7 @@ Apm.importFile("Alusus/Promises");
     // نقوم برفض المؤجلة مع خطأ له الرمز 1 و رسالة مناسبة
     مؤجلة.ارفض(مثل_سندنا[سـندنا[خـطأ_عام]().{
         أنشئ()؛
-        الرمز = 1؛
+        الرمز = "مثال_خطأ1"؛
         الرسالة = نـص("خطأ غير معروف 1")؛
     }، خـطأ])؛
     طـرفية.اطبع("مؤجلة 1 - الحالة: %d، الخطأ: %ld\ج"، مؤجلة.الحالة، مؤجلة.الخطأ.obj~ptr)؛
@@ -125,7 +125,7 @@ func testPromise {
     // نقوم برفض المؤجلة مع خطأ له الرمز 1 و رسالة مناسبة
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = "example_err1";
         message = String("Unknown error 1");
     }, Error]);
     Console.print("promise 1 - status: %d, error: %ld\n", promise.status, promise.error.obj~ptr);
@@ -483,7 +483,7 @@ for i = 0, i < 10, ++i {
 لكل ع = 0، ع < 10، ++ع {
     مؤجلة.ارفض(مثل_سندنا[سـندنا[خـطأ_عام]().{
         أنشئ()؛
-        الرمز = 1؛
+        الرمز = نـص("مثال_خطأ") + ع؛
         الرسالة = نـص("خطأ غير معروف ") + ع؛
 
     }، خـطأ])؛
@@ -505,7 +505,7 @@ def i: Int;
 for i = 0, i < 10, ++i {
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
-        code = 1;
+        code = String("example_err") + i;
         message = String("Unknown error ") + i;
     }, Error]);
 }
