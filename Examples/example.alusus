@@ -1,7 +1,7 @@
 import "Srl/Console";
 import "Srl/refs";
 import "Apm";
-Apm.importFile("Alusus/Promises");
+Apm.importPackage("Alusus/Promises@0.1");
 
 use Srl;
 use Promises;
