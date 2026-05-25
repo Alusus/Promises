@@ -1,5 +1,4 @@
 # Promises
-[[عربي]](README.ar.md)
 
 A simple Promise library for Alusus Language.
 
@@ -9,6 +8,8 @@ with support for this library.
 
 ## Adding to the Project
 
+---
+
 We can install this library using the following statements:
 
 ```
@@ -17,6 +18,8 @@ Apm.importFile("Alusus/Promises");
 ```
 
 ## Example
+
+---
 
 ```
 import "Srl/Console";
@@ -78,8 +81,9 @@ testPromiseThen();
 
 ## Functions and Types
 
-### Promise
+---
 
+### Promise
 ```
 class Promise [ResultType: type] {
     def status: Int = Status.NEW;
@@ -89,122 +93,80 @@ class Promise [ResultType: type] {
 ```
 A template Promise class where the promise result type is specified by the template argument.
 
-`status` the current state of the promise.
+* `status` (`Int`): The current state of the promise.
+* `result` (`ResultType`): The result returned from the promise.
+* `error` (`SrdRef[Error]`): The error that happened while executing the promise.
 
-`result` the result returned from the promise.
-
-`error` the error that happened while executing the promise.
-
-### resolve
+#### new
 
 ```
-handler this.resolve(res: ResultType);
+function new(): SrdRef[Promise[ResultType]]
 ```
+Creates a new promise with a status of `new`. Returns a reference to the promise of the specified type.
 
+#### resolve
+
+```
+handler this.resolve(res: ResultType)
+handler this.resolve(p: SrdRef[Promise[ResultType]])
+```
 Resolve the promise by switching its status from `NEW` to `RESOLVED` and storing the result.
 
-parameters:
+* `res`: The result to be stored in the promise as the execution result.
+* `p`: Another promise whose status will eventually propagate to the current promise. The current promise will wait for the given promise to be complete and will carry its result.
 
-`res` the result to be stored in the promise as the execution result.
-
-```
-handler this.resolve(p: SrdRef[Promise[ResultType]]);
-```
-
-Resolve the promise using another promise. The current promise will wait for the given
-promise to be complete and will carry its result.
-
-`p` the promise whose status will eventually propagate to the current promise.
-
-### reject
+#### reject
 
 ```
-handler this.reject(err: SrdRef[Error]);
+handler this.reject(err: SrdRef[Error])
 ```
 Reject the promise by switching its status from `NEW` to `REJECTED` and storing the error.
 
-parameters:
+* `err`: The error to be stored in the promise as the error that stops the execution.
 
-`error` the error to be stored in the promise as the error that stops the execution.
-
-### new
-
-```
-function new (): SrdRef[Promise[ResultType]];
-```
-Creates a new promise with a status of `new`.
-
-return value:
-
-A reference to the promise of the specified type.
-
-### then
+#### then
 
 ```
 handler [ThenType: type] this.then(
     callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
-): SrdRef[Promise[ThenType]];
+): SrdRef[Promise[ThenType]]
 ```
-A template method to determine what needs to be executed after this promise is resolved.
+A template method to determine what needs to be executed after this promise is resolved. Returns a reference to a promise with the specified result type.
 
-parameters:
+* `callback`: A closure to be called when the promise is resolved.
 
-`callback` a closure  to be called when the promise is resolved.
-
-return value:
-
-A reference to a promise with the specified result type.
-
-### catch
+#### catch
 
 ```
 handler this.catch(
     callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
-): SrdRef[Promise[ResultType]];
+): SrdRef[Promise[ResultType]]
 ```
-A method to determine what needs to be executed when an error occurred (when the promise is rejected).
+A method to determine what needs to be executed when an error occurred (when the promise is rejected). Returns a reference to a promise with the specified result type.
 
-parameters:
+* `callback`: A closure to be called when the promise is rejected.
 
-`callback` a closure to be called when the promsie is rejected.
-
-return value:
-
-A reference to a promise with the specified result type.
-
-### all
+#### all
 
 ```
-function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]];
+function all(inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]]
 ```
-Specify a set of promises, so that we consider the promise resolved when all of those promises are resolved,
-and rejected when at least one of them is rejected.
+Specify a set of promises, so that we consider the promise resolved when all of those promises are resolved, and rejected when at least one of them is rejected. Returns a reference to a promise with the specified result type.
 
-parameters:
+* `inputs`: A set of promises with the same result type.
 
-`inputs` a set of promises with the same result type.
-
-return value:
-
-A reference to a promise with the specified result type.
-
-### ignoreResult
+#### ignoreResult
 
 ```
-handler this.ignoreResult(): SrdRef[Promise[Int]];
+handler this.ignoreResult(): SrdRef[Promise[Int]]
 ```
 Ignore promise's result.
 
 This method can be used to ignore the result while using the `all` function, when the set of promises provied to `all`
 do not have the same result type, since `all` function needs a set of promises with the same type, otherwise, the
-compiler will give us an error.
+compiler will give us an error. Returns a reference to a promise with an `Int` result type, and a result equal to `0`. This integer result has no meaning and is only used because using the type of Void was not straight forward.
 
-return value:
-
-A reference to a promise with an `Int` result type, and a result equal to `0`. This integer result has no meaning
-and is only used because using the type of Void was not straight forward.
-
-### Status
+#### Status
 
 ```
 def Status: {
@@ -213,9 +175,11 @@ def Status: {
     def REJECTED: 2;
 }
 ```
-This three states of a promsie.
+The three states of a promsie.
 
 ## Recursive Promises
+
+---
 
 In some cases you need to create recursive promises that makes a very long or an infinite loop. An example
 of these are promsies that periodically read data from the net or promises that runs periodically with
@@ -296,11 +260,10 @@ for i = 0, i < 10, ++i {
 }
 ```
 
----
-
 ## License
+
+---
 
 Copyright (C) 2026 Sarmad Abdullah
 
 This project is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0). See the `COPYING` and `COPYING.LESSER` files for details.
-
