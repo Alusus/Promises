@@ -1,6 +1,8 @@
 # مـؤجلات (Promises)
 [[English]](README.md)
 
+<div dir=rtl>
+
 مكتبة بسيطة لدعم المؤجلات (promises) في لغة الأسس.
 
 توفر هذه المكتبة الدعم لمختلف وظائف المؤجلات بشكل مستقل عن المكان الذي سيتم استعمالها فيه. لا تقوم
@@ -11,23 +13,21 @@
 
 يمكن تثبيت هذه المكتبة باستعمال التعليمات البرمجية التالية:
 
-<div dir=rtl>
-
 ```
 اشمل "مـحا"؛
 مـحا.اشمل_ملف("Alusus/Promises"، "مـؤجلات.أسس")؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 import "Apm";
 Apm.importFile("Alusus/Promises");
 ```
 
-## مثال
+</div>
 
-<div dir=rtl>
+## مثال
 
 ```
 اشمل "مـتم/طـرفية"؛
@@ -91,7 +91,7 @@ Apm.importFile("Alusus/Promises");
 اختبر_مؤجلة_ثم()؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 import "Srl/Console";
@@ -153,11 +153,11 @@ func testPromiseThen {
 testPromiseThen();
 ```
 
+</div>
+
 ## الأصناف والدالات
 
 ### الصنف مـؤجلة (Promise)
-
-<div dir=rtl>
 
 ```
 صنف مـؤجلة [نـوع_الـنتيجة: نوع]{
@@ -167,7 +167,7 @@ testPromiseThen();
 }
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 class Promise [ResultType: type] {
@@ -176,27 +176,72 @@ class Promise [ResultType: type] {
     def error: SrdRef[Error];
 }
 ```
+
+</div>
+
 هذا الصنف عبارة عن قالب لتخزين معلومات المؤجلة لمختلف أنواع النتائج.
 
-`الحالة` (`status`) يعبر عن الحالة الحالية للمؤجلة.
+#### الحالة (status)
 
-`النتيجة` (`result`) النتيجة المرجعة من المؤجلة.
+```
+عرف الحالة: صـحيح؛
+```
 
-`الخطأ` (`error`) الخطأ الذي حصل أثناء محاولة تنفيذ المؤجلة.
+<div dir=ltr>
+
+```
+def status: Int;
+```
+
+</div>
+
+يعبر عن الحالة الحالية للمؤجلة.
+
+#### النتيجة (result)
+
+```
+عرف النتيجة: نـوع_الـنتيجة؛
+```
+
+<div dir=ltr>
+
+```
+def result: ResultType;
+```
+
+</div>
+
+النتيجة المرجعة من المؤجلة.
+
+#### الخطأ (error)
+
+```
+عرف الخطأ: سـندنا[خـطأ]؛
+```
+
+<div dir=ltr>
+
+```
+def error: SrdRef[Error];
+```
+
+</div>
+
+الخطأ الذي حصل أثناء محاولة تنفيذ المؤجلة.
 
 ### قرر (resolve)
-
-<div dir=rtl>
 
 ```
 عرف قرر: (نتيجة: نـوع_الـنتيجة)؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler this.resolve(res: ResultType);
 ```
+
+</div>
 
 وظيفة يمكن عن طريقها اقرار المؤجلة بتحويل حالتها من `__جديد__` إلى `__مقرر__` و تخزين النتيجة.
 
@@ -204,17 +249,17 @@ handler this.resolve(res: ResultType);
 
 `نتيجة` (`res`) النتيجة التي يجب تخزينها في المؤجلة على أنها نتيجة التنفيذ.
 
-<div dir=rtl>
-
 ```
 عرف قرر: (م: سـندنا[مـؤجلة[نـوع_الـنتيجة]])؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler this.resolve(p: SrdRef[Promise[ResultType]]);
 ```
+
+</div>
 
 قرر نتيجة المؤجلة الحالية باستخدام مؤجلة أخرى. المؤجلة الحالية ستنتظر انتهاء المؤجلة المعطاة
 وتستلم نتيجتها سواء كانت مقررة أم مرفوضة.
@@ -223,17 +268,17 @@ handler this.resolve(p: SrdRef[Promise[ResultType]]);
 
 ### ارفض (reject)
 
-<div dir=rtl>
-
 ```
 عرف ارفض: (خطأ: سندنا[خـطأ])؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler this.reject(err: SrdRef[Error]);
 ```
+
+</div>
 
 وظيفة يمكن عن طريقها رفض المؤجلة بتحويل حالتها من `__جديد__` إلى `__مرفوض__` و تخزين الخطأ الذي حصل.
 
@@ -243,17 +288,17 @@ handler this.reject(err: SrdRef[Error]);
 
 ### أنشئ (new)
 
-<div dir=rtl>
-
 ```
 عرف ارفض: (): سندنا[مـؤجلة[نـوع_الـنمط]]؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 function new (): SrdRef[Promise[ResultType]];
 ```
+
+</div>
 
 قالب وظيفة يمكن عن طريقه إنشاء مؤجلة بنمط قيمة مرجعة محدد.
 
@@ -263,21 +308,21 @@ function new (): SrdRef[Promise[ResultType]];
 
 ### ثم (then)
 
-<div dir=rtl>
-
 ```
 عرف [نـوع_ثـم: نوع] ثم(
     منادى: دالةـمغلفة(دخل: نـوع_الـنتيجة، مـؤجلة: سند[مـؤجلة[نـوع_ثـم]])
 ): سندنا[مـؤجلة[نـوع_ثـم]]؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler [ThenType: type] this.then(
     callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
 ): SrdRef[Promise[ThenType]];
 ```
+
+</div>
 
 قالب وظيفة يمكن من خلاله تحديد ما يجب تنفيذه بعد أن يتم الإنتهاء من تنفيذ مؤجلة.
 
@@ -291,21 +336,21 @@ handler [ThenType: type] this.then(
 
 ### اقبض (catch)
 
-<div dir=rtl>
-
 ```
 عرف اقبض(
     منادى: دالةـمغلفة(خطأ: سندنا[خـطأ]، مـؤجلة: سند[مـؤجلة[نـوع_الـنتيجة]])
 ): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler this.catch(
     callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
 ): SrdRef[Promise[ResultType]];
 ```
+
+</div>
 
 وظيفة يمكن من خلالها تحديد ما يجب تنفيذه عند حدوث خطأ أثناء تنفيذ مؤجلة.
 
@@ -319,19 +364,19 @@ handler this.catch(
 
 ### الكل (all)
 
-<div dir=rtl>
-
 ```
 عرف الكل (
     الدخل: مـصفوفة[سندنا[مـؤجلة[نـوع_الـنتيجة]]]
 ): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]];
 ```
+
+</div>
 
 دالة يمكن من خلالها تحديد مجموعة من المؤجلات، بحيث تكون المؤجلة المرجعة محققة في حال تحققت كافة المؤجلات،
 و غير محققة في حال كانت واحدة على الأقل من المؤجلات غير محققة..
@@ -346,17 +391,17 @@ function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[
 
 ### تجاهل_النتيجة (ignoreResult)
 
-<div dir=rtl>
-
 ```
 عرف تجاهل_النتيجة: (): سندنا[مـؤجلة[صـحيح]]؛
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 handler this.ignoreResult(): SrdRef[Promise[Int]];
 ```
+
+</div>
 
 وظيفة يمكن من خلالها إهمال نتيجة مؤجلة.
 
@@ -369,8 +414,6 @@ handler this.ignoreResult(): SrdRef[Promise[Int]];
 
 ### حـالة (Status)
 
-<div dir=rtl>
-
 ```
 صنف حـالة {
     عرف _جديد_: 0؛
@@ -379,7 +422,7 @@ handler this.ignoreResult(): SrdRef[Promise[Int]];
 }
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 def Status: {
@@ -388,6 +431,8 @@ def Status: {
     def REJECTED: 2;
 }
 ```
+
+</div>
 
 يستعمل هذا الصنف لتحديد حالة المؤجلة.
 
@@ -429,8 +474,6 @@ def Status: {
 كي تستخدم العملية `أعد` داخل مغلفة `ثم` تحتاج لتغيير تعريف المعطى الثاني من `مـؤجلة` (`Promise`)
 إلى `مـؤجلة_ثم` (`ThenPromise`) ثم استخدام الدالة `أعد` (`retry`) على المؤجلة، كما في المثال التالي:
 
-<div dir=rtl>
-
 ```
 عرف مؤجلة: سـندنا[مـؤجلة[رقـم]] = مـؤجلة[رقـم].أنشئ()؛
 عرف ثم: سـندنا[مـؤجلة[نـص]] = مؤجلة.ثم[نـص](
@@ -446,7 +489,7 @@ def Status: {
 }
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 def promise: SrdRef[Promise[Num]] = Promise[Num].new();
@@ -463,12 +506,12 @@ for i = 0, i < 10, ++i {
 }
 ```
 
+</div>
+
 ### مـؤجلة_قبض (CatchPromise)
 
 كي تستخدم العملية `أعد` داخل مغلفة `اقبض` تحتاج لتغيير تعريف المعطى الثاني من `مـؤجلة` (`Promise`)
 إلى `مـؤجلة_قبض` (`CatchPromise`) ثم استخدام الدالة `أعد` (`retry`) على المؤجلة، كما في المثال التالي:
-
-<div dir=rtl>
 
 ```
 عرف مؤجلة: سـندنا[مـؤجلة[رقـم]] = مـؤجلة[رقـم].أنشئ()؛
@@ -490,7 +533,7 @@ for i = 0, i < 10, ++i {
 }
 ```
 
-</div>
+<div dir=ltr>
 
 ```
 def promise: SrdRef[Promise[Num]] = Promise[Num].new();
@@ -511,6 +554,8 @@ for i = 0, i < 10, ++i {
 }
 ```
 
+</div>
+
 ---
 
 ## الرخصة
@@ -519,3 +564,4 @@ for i = 0, i < 10, ++i {
 
 هذا المشروع مرخص بموجب رخصة غنو العمومية الصغرى الإصدار 3.0 (LGPL-3.0). راجع ملفات `COPYING` و `COPYING.LESSER` للحصول على التفاصيل.
 
+</div>

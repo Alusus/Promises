@@ -93,9 +93,26 @@ class Promise [ResultType: type] {
 ```
 A template Promise class where the promise result type is specified by the template argument.
 
-* `status` (`Int`): The current state of the promise.
-* `result` (`ResultType`): The result returned from the promise.
-* `error` (`SrdRef[Error]`): The error that happened while executing the promise.
+#### status
+
+```
+def status: Int;
+```
+The current state of the promise.
+
+#### result
+
+```
+def result: ResultType;
+```
+The result returned from the promise.
+
+#### error
+
+```
+def error: SrdRef[Error];
+```
+The error that happened while executing the promise.
 
 #### new
 
