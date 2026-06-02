@@ -1,5 +1,7 @@
 # Promises
 
+[[عربي]](README.ar.md)
+
 A simple Promise library for Alusus Language.
 
 This library provides basic Promises functionality that is independent of the platform where the promises are to be
@@ -7,8 +9,6 @@ used (web, backend, etc). It does not provide an event loop; instead, the platfo
 with support for this library.
 
 ## Adding to the Project
-
----
 
 We can install this library using the following statements:
 
@@ -18,8 +18,6 @@ Apm.importFile("Alusus/Promises");
 ```
 
 ## Example
-
----
 
 ```
 import "Srl/Console";
@@ -81,16 +79,41 @@ testPromiseThen();
 
 ## Functions and Types
 
----
-
 ### Promise
+
 ```
 class Promise [ResultType: type] {
     def status: Int = Status.NEW;
     def result: ResultType;
     def error: SrdRef[Error];
+
+    handler this.resolve(res: ResultType);
+    handler this.resolve(p: SrdRef[Promise[ResultType]]);
+    handler this.reject(err: SrdRef[Error]); 
+    handler this.ignoreResult(): SrdRef[Promise[Int]];
+       
+    handler [ThenType: type] this.then(
+        callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
+    ): SrdRef[Promise[ThenType]];
+    
+    handler this.catch(
+        callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
+    ): SrdRef[Promise[ResultType]];
+    
+    function new (): SrdRef[Promise[ResultType]];
+    
+    function all (
+        inputs: Array[SrdRef[Promise[ResultType]]]
+    ): SrdRef[Promise[Array[ResultType]]];
+    
+    def Status: {
+        def NEW: 0;
+        def RESOLVED: 1;
+        def REJECTED: 2;
+    }
 }
 ```
+
 A template Promise class where the promise result type is specified by the template argument.
 
 #### status
@@ -98,6 +121,7 @@ A template Promise class where the promise result type is specified by the templ
 ```
 def status: Int;
 ```
+
 The current state of the promise.
 
 #### result
@@ -112,21 +136,23 @@ The result returned from the promise.
 ```
 def error: SrdRef[Error];
 ```
+
 The error that happened while executing the promise.
 
 #### new
 
 ```
-function new(): SrdRef[Promise[ResultType]]
+function new(): SrdRef[Promise[ResultType]];
 ```
 Creates a new promise with a status of `new`. Returns a reference to the promise of the specified type.
 
 #### resolve
 
 ```
-handler this.resolve(res: ResultType)
-handler this.resolve(p: SrdRef[Promise[ResultType]])
+handler this.resolve(res: ResultType);
+handler this.resolve(p: SrdRef[Promise[ResultType]]);
 ```
+
 Resolve the promise by switching its status from `NEW` to `RESOLVED` and storing the result.
 
 * `res`: The result to be stored in the promise as the execution result.
@@ -146,8 +172,9 @@ Reject the promise by switching its status from `NEW` to `REJECTED` and storing 
 ```
 handler [ThenType: type] this.then(
     callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
-): SrdRef[Promise[ThenType]]
+): SrdRef[Promise[ThenType]];
 ```
+
 A template method to determine what needs to be executed after this promise is resolved. Returns a reference to a promise with the specified result type.
 
 * `callback`: A closure to be called when the promise is resolved.
@@ -157,8 +184,9 @@ A template method to determine what needs to be executed after this promise is r
 ```
 handler this.catch(
     callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
-): SrdRef[Promise[ResultType]]
+): SrdRef[Promise[ResultType]];
 ```
+
 A method to determine what needs to be executed when an error occurred (when the promise is rejected). Returns a reference to a promise with the specified result type.
 
 * `callback`: A closure to be called when the promise is rejected.
@@ -166,7 +194,7 @@ A method to determine what needs to be executed when an error occurred (when the
 #### all
 
 ```
-function all(inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]]
+function all(inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]];
 ```
 Specify a set of promises, so that we consider the promise resolved when all of those promises are resolved, and rejected when at least one of them is rejected. Returns a reference to a promise with the specified result type.
 
@@ -175,7 +203,7 @@ Specify a set of promises, so that we consider the promise resolved when all of 
 #### ignoreResult
 
 ```
-handler this.ignoreResult(): SrdRef[Promise[Int]]
+handler this.ignoreResult(): SrdRef[Promise[Int]];
 ```
 Ignore promise's result.
 
@@ -192,11 +220,10 @@ def Status: {
     def REJECTED: 2;
 }
 ```
+
 The three states of a promsie.
 
 ## Recursive Promises
-
----
 
 In some cases you need to create recursive promises that makes a very long or an infinite loop. An example
 of these are promsies that periodically read data from the net or promises that runs periodically with
@@ -278,8 +305,6 @@ for i = 0, i < 10, ++i {
 ```
 
 ## License
-
----
 
 Copyright (C) 2026 Sarmad Abdullah
 

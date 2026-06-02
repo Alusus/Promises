@@ -1,7 +1,8 @@
 # مـؤجلات (Promises)
-[[English]](README.md)
 
 <div dir=rtl>
+
+[[English]](README.md)
 
 مكتبة بسيطة لدعم المؤجلات (promises) في لغة الأسس.
 
@@ -91,8 +92,6 @@ Apm.importFile("Alusus/Promises");
 اختبر_مؤجلة_ثم()؛
 ```
 
-<div dir=ltr>
-
 ```
 import "Srl/Console";
 import "Srl/errors";
@@ -110,7 +109,6 @@ class Num {
     handler this~init(i: ref[Num]) this.val = i.val;
     handler this = ref[Num] this.val = value.val;
 }
-
 
 func testPromise {
     Console.print("Test Promise:\n");
@@ -132,7 +130,6 @@ func testPromise {
 }
 testPromise();
 
-
 func testPromiseThen {
     Console.print("\nTest Promise.then:\n");
     // Num نقوم بإنشاء مؤجلة نمط القيمة المرجعة لها هو
@@ -153,8 +150,6 @@ func testPromiseThen {
 testPromiseThen();
 ```
 
-</div>
-
 ## الأصناف والدالات
 
 ### الصنف مـؤجلة (Promise)
@@ -164,6 +159,31 @@ testPromiseThen();
     عرف الحالة: صـحيح = حـالة._جديد_؛
     عرف النتيجة: نـوع_الـنتيجة؛
     عرف الخطأ: سـندنا[خـطأ]؛
+    
+    عملية هذا.قرر(نتيجة: نـوع_الـنتيجة)؛
+    عملية هذا.قرر(م : سندنا[مـؤجلة[نـوع_الـنتيجة]])؛
+    عملية هذا.ارفض(خطأ: سندنا[خـطأ])؛
+    عملية هذه.تجاهل_النتيجة(): سندنا[مـؤجلة[صـحيح]]؛
+    
+    عملية [نـوع_ثـم: صنف] هذا.ثم(
+        منادى: مغلفة (دخل: نـوع_الـنتيجة، مـؤجلة: سند[مـؤجلة[نـوع_ثـم]])
+    ): سندنا[مـؤجلة[نـوع_ثـم]]؛
+    
+    عملية هذا.اقبض(
+        منادى: مغلفة (خطأ: سندنا[خـطأ]، مـؤجلة: سند[مـؤجلة[نـوع_الـنتيجة]])
+    ): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
+    
+    دالة أنشئ (): سندنا[مـؤجلة[): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
+    
+    دالة الكل (
+     الدخل: مـصفوفة[سندنا[مـؤجلة[نـوع_الـنتيجة]]]
+    ): سندنا[مـؤجلة[مـصفوفة[نـوع_الـنتيجة]]]؛
+    
+    عرف حـالة {
+        عرف _جديد_: 0؛
+        عرف _مقرر_: 1؛
+        عرف _مرفوض_: 2؛
+    }   
 }
 ```
 
@@ -174,6 +194,31 @@ class Promise [ResultType: type] {
     def status: Int = Status.NEW;
     def result: ResultType;
     def error: SrdRef[Error];
+
+    handler this.resolve(res: ResultType);
+    handler this.resolve(p: SrdRef[Promise[ResultType]]);
+    handler this.reject(err: SrdRef[Error]); 
+    handler this.ignoreResult(): SrdRef[Promise[Int]];
+       
+    handler [ThenType: type] this.then(
+        callback: closure (input: ResultType, promise: ref[Promise[ThenType]])
+    ): SrdRef[Promise[ThenType]];
+    
+    handler this.catch(
+        callback: closure (err: SrdRef[Error], promise: ref[Promise[ResultType]])
+    ): SrdRef[Promise[ResultType]];
+    
+    function new (): SrdRef[Promise[ResultType]];
+    
+    function all (
+        inputs: Array[SrdRef[Promise[ResultType]]]
+    ): SrdRef[Promise[Array[ResultType]]];
+    
+    def Status: {
+        def NEW: 0;
+        def RESOLVED: 1;
+        def REJECTED: 2;
+    }
 }
 ```
 
@@ -229,16 +274,18 @@ def error: SrdRef[Error];
 
 الخطأ الذي حصل أثناء محاولة تنفيذ المؤجلة.
 
-### قرر (resolve)
+#### قرر (resolve)
 
 ```
-عرف قرر: (نتيجة: نـوع_الـنتيجة)؛
+عملية هذا.قرر(نتيجة: نـوع_الـنتيجة)؛
+عملية هذا.قرر(م : سندنا[مـؤجلة[نـوع_الـنتيجة]])؛؛
 ```
 
 <div dir=ltr>
 
 ```
 handler this.resolve(res: ResultType);
+handler this.resolve(p: SrdRef[Promise[ResultType]]);
 ```
 
 </div>
@@ -247,29 +294,13 @@ handler this.resolve(res: ResultType);
 
 المعطيات:
 
-`نتيجة` (`res`) النتيجة التي يجب تخزينها في المؤجلة على أنها نتيجة التنفيذ.
-
-```
-عرف قرر: (م: سـندنا[مـؤجلة[نـوع_الـنتيجة]])؛
-```
-
-<div dir=ltr>
-
-```
-handler this.resolve(p: SrdRef[Promise[ResultType]]);
-```
-
-</div>
-
-قرر نتيجة المؤجلة الحالية باستخدام مؤجلة أخرى. المؤجلة الحالية ستنتظر انتهاء المؤجلة المعطاة
-وتستلم نتيجتها سواء كانت مقررة أم مرفوضة.
-
-`م` (`p`) المؤجلة المرجو انتظارها واستلام النتيجة منها.
+* `نتيجة` (`res`) النتيجة التي يجب تخزينها في المؤجلة على أنها نتيجة التنفيذ.
+* `م`(`p`): مؤجل آخر ستنتقل حالته في النهاية إلى المؤجل الحالي. سينتظر المؤجل الحالي اكتمال المؤجل المُعطى، وسيحمل نتيجته.
 
 ### ارفض (reject)
 
 ```
-عرف ارفض: (خطأ: سندنا[خـطأ])؛
+عملية هذا.ارفض(خطأ: سندنا[خـطأ])؛
 ```
 
 <div dir=ltr>
@@ -284,12 +315,12 @@ handler this.reject(err: SrdRef[Error]);
 
 المعطيات:
 
-`خطأ` (`error`) الخطأ الذي يجب تخزينه في المؤجلة على أنه الخطأ الحاصل أثناء التنفيذ.
+* `خطأ` (`error`) الخطأ الذي يجب تخزينه في المؤجلة على أنه الخطأ الحاصل أثناء التنفيذ.
 
 ### أنشئ (new)
 
 ```
-عرف ارفض: (): سندنا[مـؤجلة[نـوع_الـنمط]]؛
+دالة أنشئ (): سندنا[مـؤجلة[): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
 ```
 
 <div dir=ltr>
@@ -309,8 +340,8 @@ function new (): SrdRef[Promise[ResultType]];
 ### ثم (then)
 
 ```
-عرف [نـوع_ثـم: نوع] ثم(
-    منادى: دالةـمغلفة(دخل: نـوع_الـنتيجة، مـؤجلة: سند[مـؤجلة[نـوع_ثـم]])
+عملية [نـوع_ثـم: صنف] هذا.ثم(
+    منادى: مغلفة (دخل: نـوع_الـنتيجة، مـؤجلة: سند[مـؤجلة[نـوع_ثـم]])
 ): سندنا[مـؤجلة[نـوع_ثـم]]؛
 ```
 
@@ -328,7 +359,7 @@ handler [ThenType: type] this.then(
 
 المعطيات:
 
-`منادى` (`callback`) عبارة عن دالة مغلفة تحدد ما الذي يجب تنفيذه كنتيجة للمؤجلة.
+* `منادى` (`callback`) عبارة عن دالة مغلفة تحدد ما الذي يجب تنفيذه كنتيجة للمؤجلة.
 
 القيمة المرجعة:
 
@@ -337,8 +368,8 @@ handler [ThenType: type] this.then(
 ### اقبض (catch)
 
 ```
-عرف اقبض(
-    منادى: دالةـمغلفة(خطأ: سندنا[خـطأ]، مـؤجلة: سند[مـؤجلة[نـوع_الـنتيجة]])
+عملية هذا.اقبض(
+    منادى: مغلفة (خطأ: سندنا[خـطأ]، مـؤجلة: سند[مـؤجلة[نـوع_الـنتيجة]])
 ): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
 ```
 
@@ -356,7 +387,7 @@ handler this.catch(
 
 المعطيات:
 
-`منادى` (`callback`) عبارة عن دالة مغلفة تحدد ما الذي يجب تنفيذه عند حدوث الخطأ.
+* `منادى` (`callback`) عبارة عن دالة مغلفة تحدد ما الذي يجب تنفيذه عند حدوث الخطأ.
 
 القيمة المرجعة:
 
@@ -365,15 +396,17 @@ handler this.catch(
 ### الكل (all)
 
 ```
-عرف الكل (
+دالة الكل (
     الدخل: مـصفوفة[سندنا[مـؤجلة[نـوع_الـنتيجة]]]
-): سندنا[مـؤجلة[نـوع_الـنتيجة]]؛
+): سندنا[مـؤجلة[مـصفوفة[نـوع_الـنتيجة]]]؛
 ```
 
 <div dir=ltr>
 
 ```
-function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[ResultType]]];
+function all (
+    inputs: Array[SrdRef[Promise[ResultType]]]
+): SrdRef[Promise[Array[ResultType]]];
 ```
 
 </div>
@@ -383,7 +416,7 @@ function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[
 
 المعطيات:
 
-`الدخل` (`inputs`) مجموعة المؤجلات التي تعتمد عليها المؤجلة التي يتم إرجاعها.
+* `الدخل` (`inputs`) مجموعة المؤجلات التي تعتمد عليها المؤجلة التي يتم إرجاعها.
 
 القيمة المرجعة:
 
@@ -392,7 +425,7 @@ function all (inputs: Array[SrdRef[Promise[ResultType]]]): SrdRef[Promise[Array[
 ### تجاهل_النتيجة (ignoreResult)
 
 ```
-عرف تجاهل_النتيجة: (): سندنا[مـؤجلة[صـحيح]]؛
+عملية هذه.تجاهل_النتيجة(): سندنا[مـؤجلة[صـحيح]]؛
 ```
 
 <div dir=ltr>
@@ -415,7 +448,7 @@ handler this.ignoreResult(): SrdRef[Promise[Int]];
 ### حـالة (Status)
 
 ```
-صنف حـالة {
+عرف حـالة {
     عرف _جديد_: 0؛
     عرف _مقرر_: 1؛
     عرف _مرفوض_: 2؛
@@ -555,8 +588,6 @@ for i = 0, i < 10, ++i {
 ```
 
 </div>
-
----
 
 ## الرخصة
 
