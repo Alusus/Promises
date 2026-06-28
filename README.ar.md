@@ -53,11 +53,11 @@ Apm.importFile("Alusus/Promises");
 // اختبر مـؤجلة.
 دالة اختبر_مؤجلة {
     طـرفية.اطبع("اختبر مـؤجلة:\ج")؛
-    // نقوم بإنشاء مؤجلة نمط القيمة المرجعة لها هو Num
+    // نقوم بإنشاء مؤجلة نمط القيمة المرجعة لها هو رقـم
     عرف مؤجلة: سـندنا[مـؤجلة[رقـم]] = مـؤجلة[رقـم].أنشئ()؛
     طـرفية.اطبع("مؤجلة 1 - الحالة: %d، النتيجة: %d\ج"، مؤجلة.الحالة، مؤجلة.النتيجة.القيمة)؛
 
-    // نقوم بإقرار المؤجلة بحيث تكون النتيجة هي كائن من الصف Num يحمل القيمة 5
+    // نقوم بإقرار المؤجلة بحيث تكون النتيجة هي كائن من الصف رقـم يحمل القيمة 5
     مؤجلة.قرر(رقـم(5))؛
     طـرفية.اطبع("مؤجلة 1 - الحالة: %d، النتيجة: %d\ج"، مؤجلة.الحالة، مؤجلة.النتيجة.القيمة)؛
 
@@ -74,7 +74,7 @@ Apm.importFile("Alusus/Promises");
 // اختبر مـؤجلة.ثم
 دالة اختبر_مؤجلة_ثم {
     طـرفية.اطبع("\جاختبر مـؤجلة.ثم:\ج")؛
-    // Num نقوم بإنشاء مؤجلة نمط القيمة المرجعة لها هو
+    // ننشئ مؤجلة نمط القيمة المرجعة لها هو رقـم
     عرف مؤجلة: سـندنا[مـؤجلة[رقـم]] = مـؤجلة[رقـم].أنشئ()؛
 
     // نقوم بتحديد ما يجب تنفيذه بعد تنفيذ المؤجلة
@@ -92,6 +92,8 @@ Apm.importFile("Alusus/Promises");
 اختبر_مؤجلة_ثم()؛
 ```
 
+<div dir=ltr>
+
 ```
 import "Srl/Console";
 import "Srl/errors";
@@ -101,7 +103,7 @@ Apm.importFile("Alusus/Promises");
 use Srl;
 use Promises;
 
-// نقوم بتعريف صف يمثل رقم، لاستعماله في الأمثلة التالية
+// A type representing a number to be used in the following examples
 class Num {
     def val: Int;
     handler this~init() this.val = 0;
@@ -116,11 +118,11 @@ func testPromise {
     def promise: SrdRef[Promise[Num]] = Promise[Num].new();
     Console.print("promise 1 - status: %d, value: %d\n", promise.status, promise.result.val);
 
-    //يحمل القيمة 5 Num  نقوم بإقرار المؤجلة بحيث تكون النتيجة هي كائن من الصف
+    // Resolve the promise with an object of type Num having the value of 5
     promise.resolve(Num(5));
     Console.print("promise 1 - status: %d, value: %d\n", promise.status, promise.result.val);
 
-    // نقوم برفض المؤجلة مع خطأ له الرمز 1 و رسالة مناسبة
+    // Reject th epromise with a generic error having the code example_err1
     promise.reject(castSrdRef[SrdRef[GenericError]().{
         construct();
         code = "example_err1";
@@ -135,8 +137,8 @@ func testPromiseThen {
     // Num نقوم بإنشاء مؤجلة نمط القيمة المرجعة لها هو
     def promise: SrdRef[Promise[Num]] = Promise[Num].new();
 
-    // نقوم بتحديد ما يجب تنفيذه بعد تنفيذ المؤجلة
-    // هنا ما سيتم تنفيذه هو طباعة رسالة و إقرار المؤجلة
+    // Define what should be executed when the promise is resolved. In this case we'll be
+    // printing a message then resolving the final promise.
     def then: SrdRef[Promise[String]] = promise.then[String](
         closure (input: Num, p: ref[Promise[String]]) {
             Console.print("ThenPromise triggered\n");
@@ -149,6 +151,8 @@ func testPromiseThen {
 }
 testPromiseThen();
 ```
+
+</div>
 
 ## الأصناف والدالات
 
